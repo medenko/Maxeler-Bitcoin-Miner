@@ -1,0 +1,44 @@
+package bitcoinminer;
+
+import com.maxeler.maxcompiler.v2.build.EngineParameters;
+
+public class BitcoinMinerEngineParameters extends EngineParameters {
+
+	public BitcoinMinerEngineParameters(String[] argv) {
+		super(argv);
+	}
+
+	private static final String frequency = "frequency";
+	private static final String pipelines = "pipelines";
+	private static final String useGlobalClockBuffer = "useGlobalClockBuffer";
+
+	public int getFrequency() {
+		return getParam(frequency);
+	}
+
+	public int getPipelines() {
+		return getParam(pipelines);
+	}
+
+	public Boolean getUseGlobalClockBuffer() {
+		return getParam(useGlobalClockBuffer);
+	}
+
+	@Override
+	protected void declarations() {
+		declareParam(frequency, DataType.INT, 120);
+		declareParam(pipelines, DataType.INT, 3);
+		declareParam(useGlobalClockBuffer, DataType.BOOL, true); // MAX2B true, MAIA false, OTHER unknown
+	}
+
+	@Override
+	protected void validate() {
+
+	}
+
+	@Override
+	public String getBuildName() {
+		return getMaxFileName() + "_" + getDFEModel() + "_" + getTarget();
+	}
+
+}

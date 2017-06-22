@@ -1,0 +1,76 @@
+package bitcoinminer;
+
+import com.maxeler.maxcompiler.v2.kernelcompiler.Kernel;
+import com.maxeler.maxcompiler.v2.kernelcompiler.KernelConfiguration;
+import com.maxeler.maxcompiler.v2.managers.BuildConfig;
+import com.maxeler.maxcompiler.v2.managers.engine_interfaces.CPUTypes;
+import com.maxeler.maxcompiler.v2.managers.engine_interfaces.EngineInterface;
+import com.maxeler.maxcompiler.v2.managers.engine_interfaces.InterfaceParam;
+import com.maxeler.maxcompiler.v2.managers.engine_interfaces.InterfaceParamArray;
+import com.maxeler.maxcompiler.v2.managers.standard.Manager;
+import com.maxeler.maxcompiler.v2.managers.standard.Manager.IOType;
+
+public class BitcoinMinerManager {
+
+    public static void main(String[] args) {
+        BitcoinMinerEngineParameters params = new BitcoinMinerEngineParameters(args);
+        Manager manager = new Manager(params);
+
+        KernelConfiguration kernelConfig = manager.getCurrentKernelConfig();
+        kernelConfig.optimization.setUseGlobalClockBuffer(params.getUseGlobalClockBuffer());
+        Kernel kernel = new BitcoinMinerKernel(manager.makeKernelParameters("BitcoinMinerKernel"), params);
+
+        manager.setKernel(kernel);
+        manager.setIO(IOType.ALL_CPU);
+        manager.setClockFrequency(params.getFrequency());
+        manager.createSLiCinterface(interfaceDefault());
+        manager.addMaxFileConstant("pipelines", params.getPipelines());
+
+        buildConfig(manager, params);
+        manager.build();
+    }
+
+    private static EngineInterface interfaceDefault() {
+        EngineInterface ei = new EngineInterface();
+
+        InterfaceParam N = ei.addParam("N", CPUTypes.UINT64);
+        InterfaceParam base = ei.addParam("base", CPUTypes.UINT32);
+        InterfaceParamArray data = ei.addParamArray("data", CPUTypes.UINT32);
+        InterfaceParamArray midstate = ei.addParamArray("midstate", CPUTypes.UINT32);
+        InterfaceParamArray target = ei.addParamArray("target", CPUTypes.UINT32);
+
+        ei.setScalar("BitcoinMinerKernel", "base", base);
+        ei.setScalar("BitcoinMinerKernel", "data0", data[0]);
+        ei.setScalar("BitcoinMinerKernel", "data1", data[1]);
+        ei.setScalar("BitcoinMinerKernel", "data2", data[2]);
+        ei.setScalar("BitcoinMinerKernel", "midstate0", midstate[0]);
+        ei.setScalar("BitcoinMinerKernel", "midstate1", midstate[1]);
+        ei.setScalar("BitcoinMinerKernel", "midstate2", midstate[2]);
+        ei.setScalar("BitcoinMinerKernel", "midstate3", midstate[3]);
+        ei.setScalar("BitcoinMinerKernel", "midstate4", midstate[4]);
+        ei.setScalar("BitcoinMinerKernel", "midstate5", midstate[5]);
+        ei.setScalar("BitcoinMinerKernel", "midstate6", midstate[6]);
+        ei.setScalar("BitcoinMinerKernel", "midstate7", midstate[7]);
+        ei.setScalar("BitcoinMinerKernel", "target0", target[0]);
+        ei.setScalar("BitcoinMinerKernel", "target1", target[1]);
+        ei.setScalar("BitcoinMinerKernel", "target2", target[2]);
+        ei.setScalar("BitcoinMinerKernel", "target3", target[3]);
+        ei.setScalar("BitcoinMinerKernel", "target4", target[4]);
+        ei.setScalar("BitcoinMinerKernel", "target5", target[5]);
+        ei.setScalar("BitcoinMinerKernel", "target6", target[6]);
+        ei.setScalar("BitcoinMinerKernel", "target7", target[7]);
+
+        ei.setTicks("BitcoinMinerKernel", N);
+        ei.setStream("output", CPUTypes.UINT8, N * CPUTypes.UINT8.sizeInBytes());
+
+        return ei;
+    }
+
+    private static void buildConfig(Manager manager, BitcoinMinerEngineParameters params) {
+        BuildConfig buildConfig = manager.getBuildConfig();
+        buildConfig.setMPPRCostTableSearchRange(params.getMPPRStartCT(), params.getMPPREndCT());
+        buildConfig.setMPPRParallelism(params.getMPPRThreads());
+        buildConfig.setMPPRRetryNearMissesThreshold(params.getMPPRRetryThreshold());
+    }
+
+}

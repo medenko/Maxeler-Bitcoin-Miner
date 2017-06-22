@@ -1,0 +1,284 @@
+package bitcoinminer;
+
+import com.maxeler.maxcompiler.v2.kernelcompiler.Kernel;
+import com.maxeler.maxcompiler.v2.kernelcompiler.KernelParameters;
+import com.maxeler.maxcompiler.v2.kernelcompiler.stdlib.core.Count;
+import com.maxeler.maxcompiler.v2.kernelcompiler.stdlib.core.Count.Counter;
+import com.maxeler.maxcompiler.v2.kernelcompiler.stdlib.core.Mem.RamWriteMode;
+import com.maxeler.maxcompiler.v2.kernelcompiler.stdlib.memory.Memory;
+import com.maxeler.maxcompiler.v2.kernelcompiler.types.base.DFEVar;
+import com.maxeler.maxcompiler.v2.utils.Bits;
+
+class BitcoinMinerKernel extends Kernel {
+
+	// SHA-256 constants
+	int H[] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
+	int K[] = { 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+				0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+				0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+				0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+				0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+				0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+				0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+				0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2 };
+
+	// SHA-256 logic functions
+	DFEVar ch(DFEVar x, DFEVar y, DFEVar z) {
+		optimization.pushPipeliningFactor(0);
+		DFEVar ch = (x & y) ^ (~x & z);
+		optimization.popPipeliningFactor();
+		return ch;
+	}
+
+	DFEVar maj(DFEVar x, DFEVar y, DFEVar z) {
+		optimization.pushPipeliningFactor(0);
+		DFEVar maj = (x & y) ^ (x & z) ^ (y & z);
+		optimization.popPipeliningFactor();
+		return maj;
+	}
+
+	DFEVar Sigma0(DFEVar x) {
+		optimization.pushPipeliningFactor(0);
+		DFEVar Sigma0 = x.rotateRight(2) ^ x.rotateRight(13) ^ x.rotateRight(22);
+		optimization.popPipeliningFactor();
+		return Sigma0;
+	}
+
+	DFEVar Sigma1(DFEVar x) {
+		optimization.pushPipeliningFactor(0);
+		DFEVar Sigma1 = x.rotateRight(6) ^ x.rotateRight(11) ^ x.rotateRight(25);
+		optimization.popPipeliningFactor();
+		return Sigma1;
+	}
+
+	DFEVar sigma0(DFEVar x) {
+		optimization.pushPipeliningFactor(0);
+		DFEVar sigma0 = x.rotateRight(7) ^ x.rotateRight(18) ^ x.shiftRight(3);
+		optimization.popPipeliningFactor();
+		return sigma0;
+	}
+
+	DFEVar sigma1(DFEVar x) {
+		optimization.pushPipeliningFactor(0);
+		DFEVar sigma1 = x.rotateRight(17) ^ x.rotateRight(19) ^ x.shiftRight(10);
+		optimization.popPipeliningFactor();
+		return sigma1;
+	}
+
+	// function to swap byte order of 32-bit words; e.g. 0x12345678 into 0x78563412
+	DFEVar swap(DFEVar x) {
+		DFEVar x0 = x.shiftRight(0) & 0xff;
+		DFEVar x1 = x.shiftRight(8) & 0xff;
+		DFEVar x2 = x.shiftRight(16) & 0xff;
+		DFEVar x3 = x.shiftRight(24) & 0xff;
+		return x0.shiftLeft(24) | x1.shiftLeft(16) | x2.shiftLeft(8) | x3.shiftLeft(0);
+	}
+
+	// function to workaround addition with modulo 2^32
+	DFEVar modulo(DFEVar x) {
+		return x.slice(0, 32).cast(dfeUInt(32));
+	}
+
+	// function to cast the type of constants (from INT32 to UINT32) using bits layout
+	DFEVar cast(int n) {
+		Bits bits = new Bits(32);
+		bits.setBits(n);
+		return constant.var(dfeUInt(32), bits);
+	}
+
+	// bitcoin miner kernel
+	protected BitcoinMinerKernel(KernelParameters kernelParams, BitcoinMinerEngineParameters params) {
+		super(kernelParams);
+
+		// dummy output variable
+		DFEVar output = constant.var(dfeUInt(8), 0);
+
+		// the starting point for nonce candidates (optional)
+		DFEVar base = io.scalarInput("base", dfeUInt(32));
+
+		// work for bitcoin miner (scalar inputs)
+		DFEVar[] data = new DFEVar[3];
+		data[0] = io.scalarInput("data0", dfeUInt(32));
+		data[1] = io.scalarInput("data1", dfeUInt(32));
+		data[2] = io.scalarInput("data2", dfeUInt(32));
+
+		DFEVar[] midstate = new DFEVar[8];
+		midstate[0] = io.scalarInput("midstate0", dfeUInt(32));
+		midstate[1] = io.scalarInput("midstate1", dfeUInt(32));
+		midstate[2] = io.scalarInput("midstate2", dfeUInt(32));
+		midstate[3] = io.scalarInput("midstate3", dfeUInt(32));
+		midstate[4] = io.scalarInput("midstate4", dfeUInt(32));
+		midstate[5] = io.scalarInput("midstate5", dfeUInt(32));
+		midstate[6] = io.scalarInput("midstate6", dfeUInt(32));
+		midstate[7] = io.scalarInput("midstate7", dfeUInt(32));
+
+		DFEVar[] target = new DFEVar[8];
+		target[0] = io.scalarInput("target0", dfeUInt(32));
+		target[1] = io.scalarInput("target1", dfeUInt(32));
+		target[2] = io.scalarInput("target2", dfeUInt(32));
+		target[3] = io.scalarInput("target3", dfeUInt(32));
+		target[4] = io.scalarInput("target4", dfeUInt(32));
+		target[5] = io.scalarInput("target5", dfeUInt(32));
+		target[6] = io.scalarInput("target6", dfeUInt(32));
+		target[7] = io.scalarInput("target7", dfeUInt(32));
+
+		// concatenate target components into a 256-bit target threshold
+		DFEVar targetCompare = target[0].cat(target[1]).cat(target[2]).cat(target[3])
+			.cat(target[4]).cat(target[5]).cat(target[6]).cat(target[7]).cast(dfeUInt(256));
+
+		// count ticks in kernel
+		DFEVar ticks = control.count.simpleCounter(32);
+
+		// parallelize hashing
+		for (int p = 0; p < params.getPipelines(); p++) {
+
+			// group nodes for pipelines
+			pushGroup("Group" + p);
+
+			// nonce candidates for each pipeline
+			DFEVar nonce = base + ticks * params.getPipelines() + p;
+
+			// SHA-256, round 1
+			DFEVar[] W = new DFEVar[64];
+			for (int i = 0; i <= 2; i++) {
+				W[i] = data[i];
+			}
+
+			W[3] = nonce;
+			W[4] = cast(0x80000000);
+
+			for (int i = 5; i <= 14; i++) {
+				W[i] = cast(0x00000000);
+			}
+
+			W[15] = cast(0x00000280);
+
+			for (int j = 16; j <= 63; j++) {
+				W[j] = (sigma1(W[j-2]) + W[j-7] + sigma0(W[j-15]) + W[j-16]);
+			}
+
+			DFEVar a = midstate[0];
+			DFEVar b = midstate[1];
+			DFEVar c = midstate[2];
+			DFEVar d = midstate[3];
+			DFEVar e = midstate[4];
+			DFEVar f = midstate[5];
+			DFEVar g = midstate[6];
+			DFEVar h = midstate[7];
+
+			for (int j = 0; j < 64; j++) {
+				optimization.pushEnableBitGrowth(true);
+				DFEVar hh = modulo(h + cast(K[j]) + W[j]);
+				optimization.pushPipeliningFactor(0);
+				DFEVar T1 = modulo(hh + Sigma1(e) + ch(e, f, g));
+				DFEVar T2 = modulo(Sigma0(a) + maj(a, b, c));
+				optimization.popPipeliningFactor();
+				optimization.popEnableBitGrowth();
+				h = g;
+				g = f;
+				f = e;
+				e = d + T1;
+				d = c;
+				c = b;
+				b = a;
+				a = T1 + T2;
+			}
+
+			DFEVar[] hash = new DFEVar[8];
+			hash[0] = midstate[0] + a;
+			hash[1] = midstate[1] + b;
+			hash[2] = midstate[2] + c;
+			hash[3] = midstate[3] + d;
+			hash[4] = midstate[4] + e;
+			hash[5] = midstate[5] + f;
+			hash[6] = midstate[6] + g;
+			hash[7] = midstate[7] + h;
+
+			// SHA-256, round 2
+			for (int j = 0; j <= 7; j++) {
+				W[j] = hash[j];
+			}
+
+			W[8] = cast(0x80000000);
+
+			for (int j = 9; j <= 14; j++) {
+				W[j] = cast(0x00000000);
+			}
+
+			W[15] = cast(0x00000100);
+
+			for (int j = 16; j <= 63; j++) {
+				W[j] = (sigma1(W[j-2]) + W[j-7] + sigma0(W[j-15]) + W[j-16]);
+			}
+
+			a = cast(H[0]);
+			b = cast(H[1]);
+			c = cast(H[2]);
+			d = cast(H[3]);
+			e = cast(H[4]);
+			f = cast(H[5]);
+			g = cast(H[6]);
+			h = cast(H[7]);
+
+			for (int j = 0; j < 64; j++) {
+				optimization.pushEnableBitGrowth(true);
+				DFEVar hh = modulo(h + cast(K[j]) + W[j]);
+				optimization.pushPipeliningFactor(0);
+				DFEVar T1 = modulo(hh + Sigma1(e) + ch(e, f, g));
+				DFEVar T2 = modulo(Sigma0(a) + maj(a, b, c));
+				optimization.popPipeliningFactor();
+				optimization.popEnableBitGrowth();
+				h = g;
+				g = f;
+				f = e;
+				e = d + T1;
+				d = c;
+				c = b;
+				b = a;
+				a = T1 + T2;
+			}
+
+			hash[0] = cast(H[0]) + a;
+			hash[1] = cast(H[1]) + b;
+			hash[2] = cast(H[2]) + c;
+			hash[3] = cast(H[3]) + d;
+			hash[4] = cast(H[4]) + e;
+			hash[5] = cast(H[5]) + f;
+			hash[6] = cast(H[6]) + g;
+			hash[7] = cast(H[7]) + h;
+
+			// swap byte order and concatenate double hash components into a 256-bit double hash
+			DFEVar hashCompare = swap(hash[7]).cat(swap(hash[6])).cat(swap(hash[5]))
+				.cat(swap(hash[4])).cat(swap(hash[3])).cat(swap(hash[2])).cat(swap(hash[1]))
+				.cat(swap(hash[0])).cast(dfeUInt(256));
+
+			// compare 256-bit double hash against the 256-bit target threshold
+			DFEVar match = hashCompare < targetCompare ? constant.var(dfeUInt(1), 1) : 0;
+
+			// mapped memory is set to hold up to 8 values; 4 pairs of matches and nonces
+			Memory<DFEVar> mappedRam = mem.alloc(dfeUInt(32), 8);
+			mappedRam.mapToCPU("mappedRam" + p);
+
+			// mapped memory writing addresses are controlled by an advanced counter
+			Count.Params addressParams = control.count.makeParams(3).withInc(2).withMax(8).withEnable(match);
+			Counter addressCount = control.count.makeCounter(addressParams);
+			DFEVar address = addressCount.getCount();
+
+			// write pairs of matches and nonces into mapped memory
+			mappedRam.port(address, match.cast(dfeUInt(32)), match, RamWriteMode.WRITE_FIRST);
+			mappedRam.port(address + 1, nonce, match, RamWriteMode.WRITE_FIRST);
+
+			// dummy output variable interacting with pipelined results
+			output += match.cast(dfeUInt(8));
+
+			// grouping nodes for pipelines ends here
+			popGroup();
+
+		}
+
+		// output stream
+		io.output("output", output, dfeUInt(8));
+
+	}
+
+}
