@@ -1,4 +1,4 @@
-# Maxeler-Bitcoin-Miner
+# Maxeler Bitcoin Miner
 Maxeler Dataflow Implementation of Bitcoin Miner for study purposes (Master Thesis). <br />
 It uses Getwork to fetch work for mining, and APP folder shall be importable into MaxIDE. <br />
 It is not meant for serious bitcoin mining though, as ASIC mining rigs took over long time ago. <br />
