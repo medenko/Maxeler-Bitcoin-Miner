@@ -26,8 +26,8 @@ public class BitcoinMinerEngineParameters extends EngineParameters {
 
 	@Override
 	protected void declarations() {
-		declareParam(frequency, DataType.INT, 120);
-		declareParam(pipelines, DataType.INT, 3);
+		declareParam(frequency, DataType.INT, 115); // MAX2B 115 MHz, MAIA 210 MHz, OTHER unknown
+		declareParam(pipelines, DataType.INT, 3); // MAX2B 3 pipelines, MAIA 7 pipelines, OTHER unknown
 		declareParam(useGlobalClockBuffer, DataType.BOOL, true); // MAX2B true, MAIA false, OTHER unknown
 	}
 
