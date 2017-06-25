@@ -17,9 +17,9 @@ The program accepts the following user inputs: <br />
 -h is help (optional). <br />
 
 Example (for MAX2B board): <br />
-./BitcoinMiner_MAX2B -o http://ip:port, -u username -p password  <br />
+./BitcoinMiner-MAX2B -o http://ip:port, -u username -p password  <br />
 Example (for MAIA board): <br />
-./BitcoinMiner_MAIA -o http://ip:port, -u username -p password <br />
+./BitcoinMiner-MAIA -o http://ip:port, -u username -p password <br />
 
 Measured energy efficiency (more is better): <br />
 Maxeler MaxCard MAX2B (MAX2336B): 342 Mhash/s at 56 W = 6.1 Mhash/s/W <br />
