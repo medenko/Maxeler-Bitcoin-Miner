@@ -79,8 +79,8 @@ class BitcoinMinerKernel extends Kernel {
 		return x.slice(0, 32).cast(dfeUInt(32));
 	}
 
-	// function to cast the type of constants (from INT32 to UINT32) using bits layout
-	DFEVar cast(int n) {
+	// function to cast the type of constants (INT32 to UINT32) using bits layout
+	DFEVar uint32(int n) {
 		Bits bits = new Bits(32);
 		bits.setBits(n);
 		return constant.var(dfeUInt(32), bits);
@@ -145,13 +145,13 @@ class BitcoinMinerKernel extends Kernel {
 			}
 
 			W[3] = nonce;
-			W[4] = cast(0x80000000);
+			W[4] = uint32(0x80000000);
 
 			for (int i = 5; i <= 14; i++) {
-				W[i] = cast(0x00000000);
+				W[i] = uint32(0x00000000);
 			}
 
-			W[15] = cast(0x00000280);
+			W[15] = uint32(0x00000280);
 
 			for (int j = 16; j <= 63; j++) {
 				W[j] = (sigma1(W[j-2]) + W[j-7] + sigma0(W[j-15]) + W[j-16]);
@@ -168,7 +168,7 @@ class BitcoinMinerKernel extends Kernel {
 
 			for (int j = 0; j < 64; j++) {
 				optimization.pushEnableBitGrowth(true);
-				DFEVar hh = modulo(h + cast(K[j]) + W[j]);
+				DFEVar hh = modulo(h + uint32(K[j]) + W[j]);
 				optimization.pushPipeliningFactor(0);
 				DFEVar T1 = modulo(hh + Sigma1(e) + ch(e, f, g));
 				DFEVar T2 = modulo(Sigma0(a) + maj(a, b, c));
@@ -199,30 +199,30 @@ class BitcoinMinerKernel extends Kernel {
 				W[j] = hash[j];
 			}
 
-			W[8] = cast(0x80000000);
+			W[8] = uint32(0x80000000);
 
 			for (int j = 9; j <= 14; j++) {
-				W[j] = cast(0x00000000);
+				W[j] = uint32(0x00000000);
 			}
 
-			W[15] = cast(0x00000100);
+			W[15] = uint32(0x00000100);
 
 			for (int j = 16; j <= 63; j++) {
 				W[j] = (sigma1(W[j-2]) + W[j-7] + sigma0(W[j-15]) + W[j-16]);
 			}
 
-			a = cast(H[0]);
-			b = cast(H[1]);
-			c = cast(H[2]);
-			d = cast(H[3]);
-			e = cast(H[4]);
-			f = cast(H[5]);
-			g = cast(H[6]);
-			h = cast(H[7]);
+			a = uint32(H[0]);
+			b = uint32(H[1]);
+			c = uint32(H[2]);
+			d = uint32(H[3]);
+			e = uint32(H[4]);
+			f = uint32(H[5]);
+			g = uint32(H[6]);
+			h = uint32(H[7]);
 
 			for (int j = 0; j < 64; j++) {
 				optimization.pushEnableBitGrowth(true);
-				DFEVar hh = modulo(h + cast(K[j]) + W[j]);
+				DFEVar hh = modulo(h + uint32(K[j]) + W[j]);
 				optimization.pushPipeliningFactor(0);
 				DFEVar T1 = modulo(hh + Sigma1(e) + ch(e, f, g));
 				DFEVar T2 = modulo(Sigma0(a) + maj(a, b, c));
@@ -238,14 +238,14 @@ class BitcoinMinerKernel extends Kernel {
 				a = T1 + T2;
 			}
 
-			hash[0] = cast(H[0]) + a;
-			hash[1] = cast(H[1]) + b;
-			hash[2] = cast(H[2]) + c;
-			hash[3] = cast(H[3]) + d;
-			hash[4] = cast(H[4]) + e;
-			hash[5] = cast(H[5]) + f;
-			hash[6] = cast(H[6]) + g;
-			hash[7] = cast(H[7]) + h;
+			hash[0] = uint32(H[0]) + a;
+			hash[1] = uint32(H[1]) + b;
+			hash[2] = uint32(H[2]) + c;
+			hash[3] = uint32(H[3]) + d;
+			hash[4] = uint32(H[4]) + e;
+			hash[5] = uint32(H[5]) + f;
+			hash[6] = uint32(H[6]) + g;
+			hash[7] = uint32(H[7]) + h;
 
 			// swap byte order and concatenate double hash components into a 256-bit double hash
 			DFEVar hashCompare = swap(hash[7]).cat(swap(hash[6])).cat(swap(hash[5]))
