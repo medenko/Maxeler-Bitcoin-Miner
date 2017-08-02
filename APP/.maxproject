@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<maxCompilerManager version="2">
+<enginePart internalEngineSubproject="BitcoinMiner_EngineCode" isSrcBin="false" isUseDefaultSelected="false" outputLocation="/BitcoinMiner_EngineCode/bin" projectName="BitcoinMiner"/>
+<cpuPart internalCpuSubproject="BitcoinMiner_CPUCode"/>
+<watchedFiles/>
+</maxCompilerManager>
