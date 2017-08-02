@@ -14,17 +14,18 @@
 
 int errorCount = 0; // counter of connection errors
 int acceptCount = 0; // counter of accepted shares
-int shareCount = 0; // counter of all sent shares
+int shareCount = 0; // counter of all shares
 
-// data structure - HTTP headers, as part of HTTP requests
+// data structure - HTTP headers
 struct curl_slist *headers = NULL;
-// data structure - contents of HTTP responses
+
+// data structure - content of HTTP responses
 struct responseStruct {
-	char *content;
-	size_t size;
+	char *content; // content string
+	size_t size; // content size
 };
 
-// function - write contents of HTTP responses into memory;
+// function - write content of HTTP response into memory;
 // adapted from "https://curl.haxx.se/libcurl/c/getinmemory.html"
 static size_t getInMemory(void *contents, size_t size, size_t nmemb, void *userp) {
 
@@ -58,10 +59,10 @@ bool semaphore = true;
 
 // data structure - thread data
 struct threadStruct {
-	char *url;
-	char *userpwd;
-	char *string;
-	char *nonce;
+	char *url; // URL address of bitcoin mining node
+	char *userpwd; // username and password
+	char *string; // "data" from work as string
+	char *nonce; // swapped nonce as string
 };
 
 // thread function - create and send shares with matching nonces
@@ -72,7 +73,7 @@ void *sendShare(void *arg) {
 	char *string = strdup(threadData->string);
 	char *nonce = strdup(threadData->nonce);
 
-	// once the strings are copied into memory, let the main thread continue
+	// let the main thread continue after copying strings into memory
 	semaphore = true;
 
 	// initialize CURL handle and CURL status code
@@ -90,8 +91,8 @@ void *sendShare(void *arg) {
 
 		// expand string into a share
 		char share[303];
-		char *share1 = "{\"method\": \"getwork\", \"params\": [";
-		char *share2 = "], \"id\": 1}";
+		const char *share1 = "{\"method\": \"getwork\", \"params\": [";
+		const char *share2 = "], \"id\": 1}";
 
 		strcpy(share, share1);
 		strcat(share, string);
@@ -153,15 +154,17 @@ void *sendShare(void *arg) {
 			long double delay = (long double) diff.tv_sec + (long double) diff.tv_usec / 1000000;
 			printf("delay %.0Lf ms\n", delay * 1000);
 
-			// free json objects to avoid memory leaks
+			// free memory
 			json_object_put(json);
+
 		}
 
 		// if sending share fails, print out error
 		else fprintf(stderr, "Share not sent\n");
 
-		// free memory to avoid memory leaks
+		// free memory
 		free(response.content);
+
 	}
 
 	// if CURL handle initialization fails, print out error
@@ -169,18 +172,19 @@ void *sendShare(void *arg) {
 		fprintf(stderr, "ERROR: Trouble with CURL library\n");
 	}
 
-	// free memory to prevent memory leaks
+	// free memory
 	free(string);
 	free(nonce);
 
 	// end of thread function
 	return NULL;
+
 }
 
 // function - display instructions to run program
 void use() {
 	puts("Required parameters:");
-	puts("   -o: a bitcoin mining node's URL address");
+	puts("   -o: a bitcoin mining node URL address");
 	puts("   -u: a bitcoin miner's username");
 	puts("   -p: a bitcoin miner's password");
 	puts("Optional parameters:");
@@ -190,7 +194,7 @@ void use() {
 }
 
 // main function - accept user inputs;
-// -o mining node URL address -u username -p password || -h is optional for help
+// -o mining node URL address -u username -p password || -h help (optional)
 int main (int argc, char **argv) {
 
 	char *url = NULL;
@@ -237,9 +241,9 @@ int main (int argc, char **argv) {
 	}
 
 	// allocate memory for dummy CPU output stream
-	uint8_t *output = calloc(size, sizeof(uint8_t));
+	uint8_t *output = malloc(size * sizeof(uint8_t));
 
-	// allocate memory for mapped RAM (contains pairs of matches and nonces)
+	// allocate memory for mapped RAM (pairs of matches and nonces)
 	uint64_t mappedRam[pipelines][8];
 	for (int p = 0; p < pipelines; p++) {
 		for (int r = 0; r < 8; r++) {
@@ -254,7 +258,7 @@ int main (int argc, char **argv) {
 	// initialize thread identifier
 	pthread_t pth;
 
-	// concatenate user's username and password into one string
+	// concatenate username and password into one string
 	char userpwd[256];
 	char *colon = ":";
 	strcpy(userpwd, user);
@@ -272,8 +276,10 @@ int main (int argc, char **argv) {
 
 	// data structure - content of HTTP response
 	struct responseStruct response;
-	// a string as part of HTTP request to fetch work for mining
-	char *getwork = "{\"method\": \"getwork\", \"params\": [], \"id\": 1}";
+
+	// a part of HTTP request to fetch work for mining
+	const char *getwork = "{\"method\": \"getwork\", \"params\": [], \"id\": 1}";
+
 	// data structure - json objects for parsing contents of HTTP responses
 	struct json_object *json, *jsonResult, *jsonData, *jsonMidstate, *jsonTarget;
 
@@ -284,7 +290,6 @@ int main (int argc, char **argv) {
 
 	// arrays to prepare work for bitcoin miner
 	char temp[9];
-	uint base;
 	uint data[3];
 	uint midstate[8];
 	uint target[8];
@@ -292,7 +297,8 @@ int main (int argc, char **argv) {
 	// data structure - time snapshots
 	struct timeval start, stop, diff;
 
-	// variables to forward matching nonce to a thread function
+	// nonce-related variables
+	uint base;
 	uint nonce;
 	char nonceString[8];
 
@@ -428,7 +434,7 @@ int main (int argc, char **argv) {
 				// wait for any existing threads to finish copying strings into memory
 				while(!semaphore) { }
 
-				// free json objects to avoid memory leaks
+				// free memory
 				json_object_put(json);
 
 			}
@@ -446,8 +452,9 @@ int main (int argc, char **argv) {
 				else if (errorCount == 100) fprintf(stderr, "Trouble with the chosen bitcoin mining node\n");
 			}
 
-			// free memory to avoid memory leaks
+			// free memory
 			free(response.content);
+
 		}
 
 		// if CURL handle initialization fails, print out error
