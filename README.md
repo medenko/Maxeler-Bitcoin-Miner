@@ -3,7 +3,7 @@ Maxeler Dataflow Bitcoin Miner Implementation for study purposes (Master Thesis)
 It uses Getwork to fetch work for mining, and APP folder shall be importable into MaxIDE. <br />
 It is not meant for serious bitcoin mining though, as ASIC mining rigs took over long time ago. <br />
 
-Additional libraries have to be installed: <br />
+OS Linux CentOS is required, additional libraries have to be installed: <br />
 sudo yum install curl -y <br />
 sudo yum install curl-devel -y <br />
 sudo yum install json-c -y <br />
@@ -28,3 +28,5 @@ Maxeler MaxCard MAIA (MAX4848A): 1432 Mhash/s at 56 W = 25.6 Mhash/s/W <br />
 Compared to other hardware examples: <br />
 GPU AMD Radeon HD 6950: 293 Mhash/s at 200 W = 1.47 Mhash/s/W (less energy-efficient than MaxCards) <br />
 ASIC Antminer S7: 4.73 Thash/s at 1293 W = 3.66 Ghash/s/W (far more energy-efficient than MaxCards) <br />
+
+More about it at http://ev.fe.uni-lj.si/5-2017/Meden.pdf
