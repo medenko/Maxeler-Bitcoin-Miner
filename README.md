@@ -1,7 +1,7 @@
 # Maxeler Bitcoin Miner
 Maxeler Dataflow Bitcoin Miner Implementation for study purposes (Master Thesis). <br />
 It uses Getwork to fetch work for mining, and APP folder shall be importable into MaxIDE. <br />
-It is not meant for serious bitcoin mining though, as ASIC mining rigs took over long time ago. <br />
+It is not meant for serious bitcoin mining though, as ASIC mining rigs took years ago. <br />
 
 OS Linux CentOS is required, additional libraries have to be installed: <br />
 sudo yum install curl -y <br />
