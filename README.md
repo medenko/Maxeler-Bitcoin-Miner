@@ -21,4 +21,8 @@ Example (for MAX2B board): <br />
 Example (for MAIA board): <br />
 ./BitcoinMiner-MAIA -o http://ip:port, -u username -p password <br />
 
+Because it uses long-deprecated getwork protocol, you can only 
+1) connect directly to mining pools still supporting getwork (e.g. P2Pool) or
+2) use https://github.com/slush0/stratum-mining-proxy between this getwork miner and stratum mining pool (e.g. SlushPool)
+
 Results available at http://ev.fe.uni-lj.si/5-2017/Meden.pdf
