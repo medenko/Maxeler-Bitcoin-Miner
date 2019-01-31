@@ -25,4 +25,4 @@ Because it uses long-deprecated Getwork protocol, you can only
 1) connect directly to mining pools still supporting getwork (e.g. P2Pool) or
 2) use https://github.com/slush0/stratum-mining-proxy between this Getwork miner and any Stratum mining pool (e.g. SlushPool)
 
-Results are available at http://ev.fe.uni-lj.si/5-2017/Meden.pdf
+Results are available at http://ev.fe.uni-lj.si/5-2017/Meden.pdf and http://ipsitransactions.org/journals/papers/tar/2019jan/p9.pdf
