@@ -19,7 +19,7 @@ The program accepts the following user inputs: <br />
 Example (for MAX2B board): ./BitcoinMiner-MAX2B -o http://ip:port, -u username -p password  <br />
 Example (for MAIA board): ./BitcoinMiner-MAIA -o http://ip:port, -u username -p password <br />
 
-Because it uses long-deprecated Getwork protocol, you can only <br />
+Because it uses long-deprecated Getwork protocol, you can only: <br />
 - connect directly to mining pools still supporting getwork (e.g. P2Pool) or <br />
 - use https://github.com/slush0/stratum-mining-proxy between this Getwork miner and any Stratum mining pool (e.g. SlushPool)
 
