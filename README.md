@@ -11,10 +11,10 @@ OS Linux CentOS is required, additional libraries have to be installed: <br />
 
 Prebuilt executable binaries for MAX2B and MAIA boards are included. <br />
 The program accepts the following user inputs: <br />
-  -o is URL address of bitcoin mining pool, <br />
-  -u is miner's username, <br />
-  -p is miner's password, <br />
-  -h is help (optional). <br />
+  - -o is URL address of bitcoin mining pool, <br />
+  - -u is miner's username, <br />
+  - -p is miner's password, <br />
+  - -h is help (optional). <br />
 
 Example (for MAX2B board): <br />
   ./BitcoinMiner-MAX2B -o http://ip:port, -u username -p password  <br />
