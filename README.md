@@ -17,9 +17,9 @@ The program accepts the following user inputs: <br />
   - -h is help (optional). <br />
 
 Example (for MAX2B board): <br />
-  ./BitcoinMiner-MAX2B -o http://ip:port, -u username -p password  <br />
+-  ./BitcoinMiner-MAX2B -o http://ip:port, -u username -p password  <br />
 Example (for MAIA board): <br />
-  ./BitcoinMiner-MAIA -o http://ip:port, -u username -p password <br />
+-  ./BitcoinMiner-MAIA -o http://ip:port, -u username -p password <br />
 
 Because it uses long-deprecated Getwork protocol, you can only 
 - connect directly to mining pools still supporting getwork (e.g. P2Pool) or
