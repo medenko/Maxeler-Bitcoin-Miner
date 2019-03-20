@@ -32,5 +32,5 @@ Since a long deprecated Getwork protocol is used, you can only <br />
 ## Licensing
 This software is licensed under MIT license. <br />
 However, it includes third party open source software components which have its own licenses: 
-- for APP/CPUCode/libcurl.a, please see LICENSE-curl (MIT style license).
-- for APP/CPUCode/libjsoc-c.a, please see LICENSE-json-c (MIT License).
+- for APP/CPUCode/libcurl.a, please see LICENSE/LICENSE-curl (MIT style license).
+- for APP/CPUCode/libjsoc-c.a, please see LICENSE/LICENSE-json-c (MIT License).
