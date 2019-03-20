@@ -20,5 +20,5 @@ SOFTWARE.
 
 This software includes third party open source software components which have
 its own licenses: 
-- for APP/CPUCode/libcurl.a, please see LICENSE-curl.
-- for APP/CPUCode/libjsoc-c.a, please see LICENSE-json-c.
+- for APP/CPUCode/libcurl.a, please see LICENSE/LICENSE-curl.
+- for APP/CPUCode/libjsoc-c.a, please see LICENSE/LICENSE-json-c.
