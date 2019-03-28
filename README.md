@@ -15,7 +15,7 @@ OS Linux CentOS is required, and additional libraries are needed: <br />
 - sudo yum install json-c-devel -y <br />
 
 ## Usage
-Prebuilt executable binaries for MAX2B and MAIA boards are included in BINARY folder. <br />
+Prebuilt executable binaries for MAX2B and MAIA boards are included in RELEASE section. <br />
 The program accepts the following user inputs: <br />
   - -o is URL address of bitcoin mining pool, <br />
   - -u is miner's username, <br />
