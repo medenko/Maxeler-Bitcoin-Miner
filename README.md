@@ -3,9 +3,10 @@ Maxeler Dataflow Bitcoin Miner Implementation for study purposes (Master Thesis)
 A long deprecated Getwork protocol is used to fetch work for mining, and APP folder should be importable into MaxIDE. <br />
 It is not recommended to use this software for serious bitcoin mining, because ASIC mining rigs took over long ago. <br /><br />
 
-## Results
+## Reads
 - http://ev.fe.uni-lj.si/5-2017/Meden.pdf, <br />
 - http://ipsitransactions.org/journals/papers/tar/2019jan/p9.pdf
+- https://link.springer.com/chapter/10.1007/978-3-030-13803-5_9#citeas
 
 ## Dependencies
 OS Linux CentOS is required, and additional libraries are needed: <br />
